@@ -26,13 +26,13 @@ local GetSquare = function(Position)
     return workspace.Board[Square]
 end
 
-local From = Instance.new("Highlight")
+local From = Instance.new("Highlight", workspace.Board)
 From.OutlineColor = Color3.fromRGB(255, 255, 255)
 From.FillColor = Color3.fromRGB(255, 255, 255)
 From.OutlineTransparency = 0
 From.FillTransparency = 0.5
 
-local To = Instance.new("Highlight")
+local To = Instance.new("Highlight", workspace.Board)
 To.OutlineColor = Color3.fromRGB(255, 228, 136)
 To.FillColor = Color3.fromRGB(255, 228, 136)
 To.OutlineTransparency = 0
@@ -42,8 +42,8 @@ ChessAPI.OnMessage:Connect(function(Message)
     local Response = HttpService:JSONDecode(Message)
 
     if Response.type == "bestmove" then
-        From.Parent = GetSquare(Response.from)
-        To.Parent = GetSquare(Response.to)
+        From.Adornee = GetSquare(Response.from)
+        To.Adornee = GetSquare(Response.to)
     elseif Response.type == "error" then
         ChessAPI:Close()
     end
@@ -56,8 +56,10 @@ end)
 
 ReplicatedStorage.Connections.MovePiece.OnClientEvent:Connect(function()
     task.wait(1)
+    local FEN = Board.createFENLine(MatchClient.currentMatch)
+    local FFEN = FEN:gsub("^(%S+%s+%S+%s)%S+", "%1-")
 
     ChessAPI:Send(HttpService:JSONEncode({
-        fen = Board.createFENLine(MatchClient.currentMatch)
+        fen = FFEN
     }))
 end)
