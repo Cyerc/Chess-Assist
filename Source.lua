@@ -26,6 +26,25 @@ local GetSquare = function(Position)
     return workspace.Board[Square]
 end
 
+local SubmitBoard = function()
+    local CurrentMatch = MatchClient.currentMatch
+    
+    if CurrentMatch then
+        local FEN = Board.createFENLine(CurrentMatch)
+        local FFEN = FEN:gsub("^(%S+%s+%S+%s)%S+", "%1-")
+
+        ChessAPI:Send(HttpService:JSONEncode({
+            fen = FFEN
+        }))
+    end
+end
+
+for Index, Value in pairs(workspace.Board:GetChildren()) do
+    if Value:IsA("Highlight") then
+        Value:Destroy()
+    end
+end
+
 local From = Instance.new("Highlight", workspace.Board)
 From.OutlineColor = Color3.fromRGB(255, 255, 255)
 From.FillColor = Color3.fromRGB(255, 255, 255)
@@ -55,11 +74,8 @@ ChessAPI.OnClose:Connect(function()
 end)
 
 ReplicatedStorage.Connections.MovePiece.OnClientEvent:Connect(function()
-    task.wait(1)
-    local FEN = Board.createFENLine(MatchClient.currentMatch)
-    local FFEN = FEN:gsub("^(%S+%s+%S+%s)%S+", "%1-")
-
-    ChessAPI:Send(HttpService:JSONEncode({
-        fen = FFEN
-    }))
+    task.wait(0.5)
+    SubmitBoard()
 end)
+
+SubmitBoard()
